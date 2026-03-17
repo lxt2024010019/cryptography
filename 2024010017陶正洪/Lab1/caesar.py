@@ -1,102 +1,35 @@
-def caesar_decrypt(ciphertext, shift):
-    """
-    对密文进行凯撒解密
-    :param ciphertext: 密文字符串
-    :param shift: 移位量（密钥）
-    :return: 解密后的明文
-    """
-    plaintext = ""
-    for char in ciphertext:
-        if char.isalpha():
-            # 只处理字母，保持大写形式
-            shifted = ord(char) - shift
-            if shifted < ord('A'):
-                shifted += 26
-            plaintext += chr(shifted)
+# Lab1: 穷举法破译凯撒密码
+# 实验给定的待解密密文
+cipher_text = "NUFECMWBYUJMBIQGYNBYWIXY"
+
+print("凯撒密码穷举解密结果：")
+print("=" * 50)
+
+# 穷举所有可能的密钥k（1~25），符合实验要求
+for k in range(1, 26):
+    plain_text = ""
+    # 遍历密文的每个字符进行解密
+    for c in cipher_text:
+        # 仅处理大写英文字母（本题密文均为大写）
+        if c.isupper():
+            # 将字母转换为0-25的字母表位置（A对应0，Z对应25）
+            char_num = ord(c) - ord('A')
+            # 核心解密逻辑：前移k位，模26实现字母循环（自动处理负数）
+            decrypt_num = (char_num - k) % 26
+            # 转换回大写字母
+            decrypt_char = chr(decrypt_num + ord('A'))
+            plain_text += decrypt_char
         else:
-            # 非字母字符保持不变
-            plaintext += char
-    return plaintext
+            # 非字母字符直接保留（本题无此类字符）
+            plain_text += c
+    # 严格按照实验要求的格式输出
+    print(f"k={k:<2d} : {plain_text}")
 
-
-def brute_force_caesar(ciphertext):
-    """
-    穷举所有可能的密钥（1-25）进行解密
-    :param ciphertext: 密文字符串
-    """
-    print(f"密文: {ciphertext}")
-    print("=" * 50)
-    print("所有可能的解密结果：")
-    print("=" * 50)
-    
-    results = []
-    for shift in range(1, 26):
-        decrypted = caesar_decrypt(ciphertext, shift)
-        print(f"k={shift:2d}: {decrypted}")
-        results.append((shift, decrypted))
-    
-    return results
-
-
-def find_meaningful_result(results):
-    """
-    找出有意义的明文结果
-    通过常见英文单词和词组来判断
-    """
-    # 常见的英文单词和词组
-    common_words = ['THE', 'AND', 'FOR', 'YOU', 'ARE', 'THIS', 'THAT', 
-                   'HAVE', 'WILL', 'YOUR', 'FROM', 'WITH', 'KNOW', 
-                   'PLEASE', 'STUDENT', 'HELLO', 'WORLD', 'LAB', 
-                   'EXPERIMENT', 'CAESAR', 'CIPHER']
-    
-    meaningful_results = []
-    for shift, text in results:
-        # 检查是否包含常见英文单词
-        words = text.split()
-        match_count = 0
-        for word in words:
-            if word in common_words:
-                match_count += 1
-        
-        # 如果匹配到至少一个常见单词，认为是可能的结果
-        if match_count > 0:
-            meaningful_results.append((shift, text, match_count))
-    
-    # 按匹配单词数量排序
-    meaningful_results.sort(key=lambda x: x[2], reverse=True)
-    return meaningful_results
-
-
-def main():
-    # 给定的密文
-    ciphertext = "NUFECMBYUBJBIQGYNBYMIXY"
-    
-    # 执行穷举解密
-    results = brute_force_caesar(ciphertext)
-    
-    print("=" * 50)
-    print("\n分析结果：")
-    print("=" * 50)
-    
-    # 找出最有意义的结果
-    meaningful = find_meaningful_result(results)
-    
-    if meaningful:
-        best_shift, best_text, match_count = meaningful[0]
-        print(f"正确的密钥是: k = {best_shift}")
-        print(f"解密后的明文是: {best_text}")
-        print(f"\n判断依据:")
-        print(f"1. 该结果包含多个常见的英文单词：")
-        # 找出结果中包含的常见单词
-        words = best_text.split()
-        found_words = [word for word in words if word in ['THE', 'AND', 'FOR', 'YOU', 'ARE', 'THIS', 'THAT', 
-                                                         'HAVE', 'WILL', 'YOUR', 'FROM', 'WITH', 'KNOW']]
-        print(f"   - 识别出的单词: {', '.join(found_words)}")
-        print(f"2. 该结果在语法上通顺，符合英文表达习惯")
-        print(f"3. 其他密钥解密结果均为无意义的乱码")
-    else:
-        print("未能通过常见单词匹配到有意义的结果，请人工检查所有解密结果")
-
-
-if __name__ == "__main__":
-    main()
+# 实验结果说明（符合报告要求）
+print("\n" + "=" * 50)
+print("实验结果说明：")
+print("1. 正确的密钥k：20")
+print("2. 解密后的明文：TALKISCHEAPSHOWMETHECODE")
+print("3. 判断依据：")
+print("   凯撒密码的密钥范围仅1~25，穷举所有结果后，只有k=20对应的解密结果是有意义的英文句子，")
+print("   对应经典技术名言 \"Talk is cheap, show me the code\"，符合明文的语义要求，因此为正确结果。")
