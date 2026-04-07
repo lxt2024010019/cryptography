@@ -1,0 +1,52 @@
+name: PR 自动审核
+
+on:
+  workflow_run:
+    workflows: ["PR 信息收集"]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+  contents: write
+  actions: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+      actions: read
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装依赖
+        run: pip install requests
+
+      - name: 下载 PR 信息 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pr-info
+          path: pr-info/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: 读取 PR 信息并审核
+        env:
+          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          export PR_NUMBER=$(cat pr-info/pr_number.txt)
+          export PR_TITLE=$(cat pr-info/pr_title.txt)
+          export HEAD_SHA=$(cat pr-info/head_sha.txt)
+          echo "审核 PR #$PR_NUMBER：$PR_TITLE"
+          python .github/workflows/pr_check.py
