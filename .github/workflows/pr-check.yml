@@ -1,0 +1,23 @@
+name: PR 信息收集
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 保存 PR 信息到 artifact
+        run: |
+          mkdir -p pr-info
+          echo "${{ github.event.pull_request.number }}" > pr-info/pr_number.txt
+          echo "${{ github.event.pull_request.title }}" > pr-info/pr_title.txt
+          echo "${{ github.event.pull_request.head.sha }}" > pr-info/head_sha.txt
+
+      - name: 上传 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-info
+          path: pr-info/
+          retention-days: 1
